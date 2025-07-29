@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #e2e8f0; /* All text color in dark mode */
+        }
+        .app-container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100vw; /* Full screen width */
+            height: 100vh; /* Full screen height */
+            max-width: none; /* Remove max-width constraint */
+            max-height: none; /* Remove max-height constraint */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease-in-out;
+        }
+        .app-container.dark-mode {
+            background-color: #2d3748;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .page {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .page.hidden {
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+        }
+        .category-card {
+            background-color: #f8fafc;
+            border-radius: 15px;
+            padding: 0; /* No padding on the card itself */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            overflow: hidden; /* Ensure image doesn't overflow */
+        }
+        .dark-mode .category-card {
+            background-color: #4a5568;
+            border-color: #6366f1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .category-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .dark-mode .category-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .category-image {
+            width: 100%; /* Make image fill its box */
+            height: 120px; /* Adjusted height for better display */
+            object-fit: cover; /* Ensure image covers the area */
+            border-radius: 15px 15px 0 0; /* Rounded top corners, sharp bottom */
+            margin-bottom: 0; /* Remove margin-bottom from image */
+            border-bottom: 2px solid #cbd5e1; /* Separator for image and text */
+        }
+        .dark-mode .category-image {
+            border-color: #a0aec0;
+        }
+        .category-card h4 {
+            margin-top: 0.75rem; /* Add margin for text under the box */
+            margin-bottom: 0.25rem;
+            padding: 0 0.5rem 0.5rem; /* Padding for text inside the card */
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .category-card p {
+            display: none; /* Hide description in the card view */
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        .dark-mode .modal-content {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .button-gradient {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+        }
+        .button-gradient:hover {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            transform: translateY(-2px);
+        }
+        .button-gradient:active {
+            transform: translateY(0);
+        }
+        /* Dark mode text colors */
+        .dark-mode .text-gray-800 { color: #e2e8f0 !important; }
+        .dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+        .dark-mode .text-gray-700 { color: #cbd5e1 !important; }
+        .dark-mode .text-gray-500 { color: #a0aec0 !important; }
+        .dark-mode .border-gray-300 { border-color: #4a5568 !important; }
+        .dark-mode input, .dark-mode textarea {
+            background-color: #2d3748 !important;
+            color: #e2e8f0 !important;
+            border-color: #4a5568 !important;
+        }
+        .dark-mode input::placeholder, .dark-mode textarea::placeholder {
+            color: #a0aec0 !important;
+        }
+        .dark-mode .bg-white { background-color: #2d3748 !important; }
+        .dark-mode .shadow-xl { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important; }
+        .dark-mode .border-b { border-color: #4a5568 !important; }
+        .dark-mode .bg-indigo-50 { background-color: #4338ca !important; }
+        .dark-mode .hover\:bg-indigo-50:hover { background-color: #4338ca !important; }
+
+        /* Specific dark mode styles for select and light mode button text */
+        .dark-mode #languageSelect {
+            color: #000000 !important; /* Black text for language select in dark mode */
+        }
+        .dark-mode #lightModeBtn span {
+            color: #000000 !important; /* Black text for light mode button in dark mode */
+        }
+        .dark-mode #lightModeBtn i {
+            color: #000000 !important; /* Black icon for light mode button in dark mode */
+        }
+
+        /* Category Detail Page styles */
+        .category-detail-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw; /* Full screen width */
+            height: 100vh; /* Full screen height */
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align content to top */
+            padding: 2rem;
+            box-sizing: border-box;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+            overflow-y: auto;
+        }
+        .dark-mode .category-detail-page {
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .category-detail-page.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .category-detail-page-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 2rem; /* Add margin from top */
+            position: relative;
+        }
+        .dark-mode .category-detail-page-content {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+        .category-detail-page-content img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            border: 2px solid #cbd5e1;
+        }
+        .dark-mode .category-detail-page-content img {
+            border-color: #a0aec0;
+        }
+        .category-detail-page-content h3 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 1rem;
+        }
+        .dark-mode .category-detail-page-content h3 {
+            color: #e2e8f0;
+        }
+        .category-detail-page-content p {
+            font-size: 1.25rem;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .dark-mode .category-detail-page-content p {
+            color: #cbd5e1;
+        }
+        .detail-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            color: #a0aec0;
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        .detail-close-btn:hover {
+            color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Access Code Page -->
+        <div id="access-page" class="page">
+            <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center max-w-sm w-full transition-all duration-500 ease-in-out transform scale-100 opacity-100">
+                <i class="fas fa-lock text-6xl text-indigo-500 mb-6 animate-bounce"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4" data-en="Access Required" data-ku="پێویستە کۆدی دەستگەیشتن" data-ar="الوصول مطلوب">Access Required</h2>
+                <p class="text-gray-600 text-center mb-6" data-en="Please enter the access code to proceed." data-ku="تکایە کۆدی دەستگەیشتن بنووسە بۆ بەردەوامبوون." data-ar="الرجاء إدخال رمز الدخول للمتابعة.">Please enter the access code to proceed.</p>
+                <input type="password" id="accessCodeInput" placeholder="Enter code" class="w-full px-5 py-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg text-center tracking-widest" maxlength="3">
+                <button id="enterAppBtn" class="w-full button-gradient text-white font-semibold py-3 rounded-lg text-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75" data-en="Enter App" data-ku="چوونە ژوورەوە بۆ ئەپ" data-ar="الدخول إلى التطبيق">
+                    Enter App
+                </button>
+                <p id="accessError" class="text-red-600 mt-4 text-sm hidden" data-en="Incorrect access code. Please try again." data-ku="کۆدی دەستگەیشتن هەڵەیە. تکایە دووبارە هەوڵبدەرەوە." data-ar="رمز الدخول غير صحيح. الرجاء المحاولة مرة أخرى.">Incorrect access code. Please try again.</p>
+            </div>
+        </div>
+
+        <!-- Main App Page -->
+        <div id="main-app-page" class="page hidden flex-grow p-0">
+            <nav class="w-full bg-white border-b border-gray-200 p-4 flex justify-center space-x-8 rounded-t-2xl shadow-sm">
+                <button id="homeNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+                    <i class="fas fa-home"></i>
+                    <span data-en="Home" data-ku="ماڵەوە" data-ar="الرئيسية">Home</span>
+                </button>
+                <button id="aboutUsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-en="About Us" data-ku="دەربارەی ئێمە" data-ar="عنا">About Us</span>
+                </button>
+                <button id="settingsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+                    <i class="fas fa-cog"></i>
+                    <span data-en="Settings" data-ku="ڕێکخستنەکان" data-ar="الإعدادات">Settings</span>
+                </button>
+            </nav>
+
+            <!-- Home Section -->
+            <div id="home-section" class="flex-grow w-full p-6 overflow-y-auto">
+                <div class="flex flex-col md:flex-row items-center justify-between mb-8 space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="relative w-full md:w-2/3">
+                        <input type="text" id="searchCategoryInput" placeholder="Search categories..." class="w-full px-5 py-3 pl-12 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg shadow-sm">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                    </div>
+                    <button id="addCategoryBtn" class="button-gradient text-white font-semibold py-3 px-8 rounded-full text-lg shadow-lg hover:shadow-xl flex items-center space-x-2 whitespace-nowrap" data-en="Add Category" data-ku="زیادکردنی پۆل" data-ar="إضافة فئة">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Category</span>
+                    </button>
+                </div>
+
+                <div id="categoriesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6">
+                    <!-- Categories will be rendered here -->
+                </div>
+            </div>
+
+            <!-- About Us Section -->
+            <div id="about-us-section" class="flex-grow w-full p-8 hidden flex-col items-center justify-center text-center">
+                <i class="fas fa-lightbulb text-6xl text-purple-500 mb-6 animate-pulse"></i>
+                <h2 class="text-4xl font-extrabold text-gray-800 mb-4" data-en="About This App" data-ku="دەربارەی ئەم ئەپە" data-ar="حول هذا التطبيق">About This App</h2>
+                <p class="text-lg text-gray-700 leading-relaxed max-w-2xl mb-6" data-en="This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature." data-ku="ئەمە ئەپێکی بەڕێوەبردنی پۆلەکانە کە بە سادەیی و جوانی دیزاین کراوە بۆ یارمەتیدانی ئێوە لە ڕێکخستنی حەزەکانتان، پڕۆژەکانتان، یان هەر کۆمەڵێک شت. بە ئاسانی پۆلی نوێ زیاد بکەن لەگەڵ وێنە و وەسفی تایبەت، و بە خێرایی ئەوەی دەیگەرێن بدۆزنەوە بە بەکارهێنانی تایبەتمەندی گەڕان." data-ar="هذا تطبيق بسيط وأنيق لإدارة الفئات مصمم لمساعدتك في تنظيم اهتماماتك أو مشاريعك أو أي مجموعة من العناصر. يمكنك بسهولة إضافة فئات جديدة بصور وأوصاف مخصصة، والعثور بسرعة على ما تبحث عنه باستخدام ميزة البحث المدمجة.">
+                    This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature.
+                </p>
+                <p class="text-md text-gray-500" data-en="Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience." data-ku="بە HTML، Tailwind CSS، و JavaScript دروست کراوە بۆ ئەزموونێکی بەکارهێنەری نەرم و وەڵامدەرەوە." data-ar="تم بناؤه باستخدام HTML و Tailwind CSS و JavaScript لتجربة مستخدم سلسة ومتجاوبة.">
+                    Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience.
+                </p>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="flex-grow w-full p-8 hidden flex-col items-center justify-center text-center">
+                <i class="fas fa-cogs text-6xl text-blue-500 mb-6 animate-spin"></i>
+                <h2 class="text-4xl font-extrabold text-gray-800 mb-6" data-en="Settings" data-ku="ڕێکخستنەکان" data-ar="الإعدادات">Settings</h2>
+
+                <div class="mb-8 w-full max-w-md flex flex-col items-center">
+                    <label for="languageSelect" class="block text-gray-700 text-xl font-semibold mb-3" data-en="Select Language" data-ku="زمانی هەڵبژاردن" data-ar="اختر اللغة">Select Language</label>
+                    <select id="languageSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                        <option value="en" data-en="English" data-ku="ئینگلیزی" data-ar="الإنجليزية">English</option>
+                        <option value="ku" data-en="Kurdish" data-ku="کوردی" data-ar="الكردية">Kurdish</option>
+                        <option value="ar" data-en="Arabic" data-ku="عەرەبی" data-ar="العربية">Arabic</option>
+                    </select>
+                </div>
+
+                <div class="mb-8 w-full max-w-md flex flex-col items-center">
+                    <label class="block text-gray-700 text-xl font-semibold mb-3" data-en="Theme" data-ku="تیم" data-ar="السمة">Theme</label>
+                    <div class="flex justify-center space-x-6">
+                        <button id="lightModeBtn" class="flex items-center space-x-2 px-6 py-3 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition duration-300 ease-in-out shadow-md">
+                            <i class="fas fa-sun text-xl"></i>
+                            <span data-en="Light Mode" data-ku="ڕووناک" data-ar="الوضع الفاتح">Light Mode</span>
+                        </button>
+                        <button id="darkModeBtn" class="flex items-center space-x-2 px-6 py-3 rounded-full bg-gray-700 text-white hover:bg-gray-800 transition duration-300 ease-in-out shadow-md">
+                            <i class="fas fa-moon text-xl"></i>
+                            <span data-en="Dark Mode" data-ku="تاریک" data-ar="الوضع الداكن">Dark Mode</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Category Modal -->
+        <div id="addCategoryModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800" data-en="Add New Category" data-ku="زیادکردنی پۆلی نوێ" data-ar="إضافة فئة جديدة">Add New Category</h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 text-3xl transition duration-200">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label for="categoryNameInput" class="block text-gray-700 text-sm font-semibold mb-2" data-en="Category Name" data-ku="ناوی پۆل" data-ar="اسم الفئة">Category Name</label>
+                    <input type="text" id="categoryNameInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Nature, Technology">
+                </div>
+                <div class="mb-4">
+                    <label for="categoryDescInput" class="block text-gray-700 text-sm font-semibold mb-2" data-en="Description" data-ku="وەسف" data-ar="الوصف">Description</label>
+                    <textarea id="categoryDescInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-24 resize-none" placeholder="A brief description of this category..."></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="categoryFileInput" class="block text-gray-700 text-sm font-semibold mb-2" data-en="Select Image" data-ku="وێنە هەڵبژێرە" data-ar="اختر صورة">Select Image</label>
+                    <input type="file" id="categoryFileInput" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button id="saveCategoryBtn" class="button-gradient text-white font-semibold py-3 px-6 rounded-lg text-lg w-full shadow-md hover:shadow-lg flex items-center justify-center space-x-2" data-en="Save Category" data-ku="پۆلەکە پاشەکەوت بکە" data-ar="حفظ الفئة">
+                    <i class="fas fa-save"></i>
+                    <span>Save Category</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Category Detail Page -->
+        <div id="categoryDetailPage" class="category-detail-page">
+            <div class="category-detail-page-content">
+                <button id="closeCategoryDetailPageBtn" class="detail-close-btn">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                <img id="detailPageCategoryImg" src="" alt="Category Image">
+                <h3 id="detailPageCategoryName" class="text-gray-800"></h3>
+                <p id="detailPageCategoryDesc" class="text-gray-700"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const accessCodeInput = document.getElementById('accessCodeInput');
+        const enterAppBtn = document.getElementById('enterAppBtn');
+        const accessPage = document.getElementById('access-page');
+        const mainAppPage = document.getElementById('main-app-page');
+        const accessError = document.getElementById('accessError');
+
+        const homeNavBtn = document.getElementById('homeNavBtn');
+        const aboutUsNavBtn = document.getElementById('aboutUsNavBtn');
+        const settingsNavBtn = document.getElementById('settingsNavBtn');
+        const homeSection = document.getElementById('home-section');
+        const aboutUsSection = document.getElementById('about-us-section');
+        const settingsSection = document.getElementById('settings-section');
+
+        const searchCategoryInput = document.getElementById('searchCategoryInput');
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        const categoriesContainer = document.getElementById('categoriesContainer');
+
+        const addCategoryModal = document.getElementById('addCategoryModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const categoryNameInput = document.getElementById('categoryNameInput');
+        const categoryDescInput = document.getElementById('categoryDescInput');
+        const categoryFileInput = document.getElementById('categoryFileInput');
+        const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+
+        const languageSelect = document.getElementById('languageSelect');
+        const lightModeBtn = document.getElementById('lightModeBtn');
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        const appContainer = document.getElementById('appContainer');
+
+        const categoryDetailPage = document.getElementById('categoryDetailPage');
+        const closeCategoryDetailPageBtn = document.getElementById('closeCategoryDetailPageBtn');
+        const detailPageCategoryImg = document.getElementById('detailPageCategoryImg');
+        const detailPageCategoryName = document.getElementById('detailPageCategoryName');
+        const detailPageCategoryDesc = document.getElementById('detailPageCategoryDesc');
+
+        let categories = [];
+        let currentLanguage = 'en';
+
+        const translations = {
+            en: {
+                "Access Required": "Access Required",
+                "Please enter the access code to proceed.": "Please enter the access code to proceed.",
+                "Enter App": "Enter App",
+                "Incorrect access code. Please try again.": "Incorrect access code. Please try again.",
+                "Home": "Home",
+                "About Us": "About Us",
+                "Settings": "Settings",
+                "Add Category": "Add Category",
+                "No categories found matching ": "No categories found matching ",
+                "No categories added yet. Click \"Add Category\" to get started!": "No categories added yet. Click \"Add Category\" to get started!",
+                "About This App": "About This App",
+                "This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature.": "This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature.",
+                "Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience.": "Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience.",
+                "Select Language": "Select Language",
+                "English": "English",
+                "Kurdish": "Kurdish",
+                "Arabic": "Arabic",
+                "Theme": "Theme",
+                "Light Mode": "Light Mode",
+                "Dark Mode": "Dark Mode",
+                "Add New Category": "Add New Category",
+                "Category Name": "Category Name",
+                "Description": "Description",
+                "Select Image": "Select Image",
+                "Save Category": "Save Category"
+            },
+            ku: {
+                "Access Required": "پێویستە کۆدی دەستگەیشتن",
+                "Please enter the access code to proceed.": "تکایە کۆدی دەستگەیشتن بنووسە بۆ بەردەوامبوون.",
+                "Enter App": "چوونە ژوورەوە بۆ ئەپ",
+                "Incorrect access code. Please try again.": "کۆدی دەستگەیشتن هەڵەیە. تکایە دووبارە هەوڵبدەرەوە.",
+                "Home": "ماڵەوە",
+                "About Us": "دەربارەی ئێمە",
+                "Settings": "ڕێکخستنەکان",
+                "Add Category": "زیادکردنی پۆل",
+                "No categories found matching ": "هیچ پۆلێک نەدۆزرایەوە کە لەگەڵ ",
+                "No categories added yet. Click \"Add Category\" to get started!": "هێشتا هیچ پۆلێک زیاد نەکراوە. کرتە بکە لەسەر \"زیادکردنی پۆل\" بۆ دەستپێکردن!",
+                "About This App": "دەربارەی ئەم ئەپە",
+                "This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature.": "ئەمە ئەپێکی بەڕێوەبردنی پۆلەکانە کە بە سادەیی و جوانی دیزاین کراوە بۆ یارمەتیدانی ئێوە لە ڕێکخستنی حەزەکانتان، پڕۆژەکانتان، یان هەر کۆمەڵێک شت. بە ئاسانی پۆلی نوێ زیاد بکەن لەگەڵ وێنە و وەسفی تایبەت، و بە خێرایی ئەوەی دەیگەرێن بدۆزنەوە بە بەکارهێنانی تایبەتمەندی گەڕان.",
+                "Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience.": "بە HTML، Tailwind CSS، و JavaScript دروست کراوە بۆ ئەزموونێکی بەکارهێنەری نەرم و وەڵامدەرەوە.",
+                "Select Language": "زمانی هەڵبژاردن",
+                "English": "ئینگلیزی",
+                "Kurdish": "کوردی",
+                "Arabic": "عەرەبی",
+                "Theme": "تیم",
+                "Light Mode": "ڕووناک",
+                "Dark Mode": "تاریک",
+                "Add New Category": "زیادکردنی پۆلی نوێ",
+                "Category Name": "ناوی پۆل",
+                "Description": "وەسف",
+                "Select Image": "وێنە هەڵبژێرە",
+                "Save Category": "پۆلەکە پاشەکەوت بکە"
+            },
+            ar: {
+                "Access Required": "الوصول مطلوب",
+                "Please enter the access code to proceed.": "الرجاء إدخال رمز الدخول للمتابعة.",
+                "Enter App": "الدخول إلى التطبيق",
+                "Incorrect access code. Please try again.": "رمز الدخول غير صحيح. الرجاء المحاولة مرة أخرى.",
+                "Home": "الرئيسية",
+                "About Us": "عنا",
+                "Settings": "الإعدادات",
+                "Add Category": "إضافة فئة",
+                "No categories found matching ": "لم يتم العثور على فئات مطابقة لـ ",
+                "No categories added yet. Click \"Add Category\" to get started!": "لم يتم إضافة أي فئات بعد. انقر على \"إضافة فئة\" للبدء!",
+                "About This App": "حول هذا التطبيق",
+                "This is a simple yet elegant category management application designed to help you organize your interests, projects, or any collection of items. Easily add new categories with custom images and descriptions, and quickly find what you're looking for using the integrated search feature.": "هذا تطبيق بسيط وأنيق لإدارة الفئات مصمم لمساعدتك في تنظيم اهتماماتك أو مشاريعك أو أي مجموعة من العناصر. يمكنك بسهولة إضافة فئات جديدة بصور وأوصاف مخصصة، والعثور بسرعة على ما تبحث عنه باستخدام ميزة البحث المدمجة.",
+                "Built with HTML, Tailwind CSS, and JavaScript for a smooth and responsive user experience.": "تم بناؤه باستخدام HTML و Tailwind CSS و JavaScript لتجربة مستخدم سلسة ومتجاوبة.",
+                "Select Language": "اختر اللغة",
+                "English": "الإنجليزية",
+                "Kurdish": "الكردية",
+                "Arabic": "العربية",
+                "Theme": "السمة",
+                "Light Mode": "الوضع الفاتح",
+                "Dark Mode": "الوضع الداكن",
+                "Add New Category": "إضافة فئة جديدة",
+                "Category Name": "اسم الفئة",
+                "Description": "الوصف",
+                "Select Image": "اختر صورة",
+                "Save Category": "حفظ الفئة"
+            }
+        };
+
+        function applyLanguage(lang) {
+            document.querySelectorAll('[data-en]').forEach(element => {
+                element.textContent = translations[lang][element.dataset.en] || element.dataset.en;
+            });
+            // Update placeholders separately as textContent doesn't apply
+            document.getElementById('accessCodeInput').placeholder = (lang === 'en') ? 'Enter code' : (lang === 'ku' ? 'کۆد بنووسە' : 'أدخل الرمز');
+            document.getElementById('searchCategoryInput').placeholder = (lang === 'en') ? 'Search categories...' : (lang === 'ku' ? 'گەڕان بەدوای پۆلەکان...' : 'البحث عن الفئات...');
+            document.getElementById('categoryNameInput').placeholder = (lang === 'en') ? 'e.g., Nature, Technology' : (lang === 'ku' ? 'بۆ نموونە، سروشت، تەکنەلۆجیا' : 'مثال: الطبيعة، التكنولوجيا');
+            document.getElementById('categoryDescInput').placeholder = (lang === 'en') ? 'A brief description of this category...' : (lang === 'ku' ? 'وەسفێکی کورت بۆ ئەم پۆلە...' : 'وصف موجز لهذه الفئة...');
+        }
+
+        function toggleDarkMode(isDarkMode) {
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                appContainer.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+                appContainer.classList.remove('dark-mode');
+            }
+        }
+
+        function renderCategories(filterText = '') {
+            categoriesContainer.innerHTML = '';
+            const filteredCategories = categories.filter(category =>
+                category.name.toLowerCase().includes(filterText.toLowerCase()) ||
+                category.description.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            if (filteredCategories.length === 0 && filterText !== '') {
+                categoriesContainer.innerHTML = `
+                    <div class="col-span-full text-center text-gray-500 text-xl py-10">
+                        <i class="fas fa-folder-open text-4xl mb-4"></i>
+                        <p>${translations[currentLanguage]["No categories found matching "]}"${filterText}".</p>
+                    </div>
+                `;
+                return;
+            } else if (filteredCategories.length === 0) {
+                 categoriesContainer.innerHTML = `
+                    <div class="col-span-full text-center text-gray-500 text-xl py-10">
+                        <i class="fas fa-box-open text-4xl mb-4"></i>
+                        <p>${translations[currentLanguage]["No categories added yet. Click \"Add Category\" to get started!"]}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredCategories.forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                categoryCard.innerHTML = `
+                    <img src="${category.imageUrl}" alt="${category.name}" class="category-image" onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/64748b?text=No+Image';">
+                    <h4 class="text-lg font-semibold text-gray-800">${category.name}</h4>
+                `;
+                categoryCard.addEventListener('click', () => openCategoryDetailPage(category));
+                categoriesContainer.appendChild(categoryCard);
+            });
+        }
+
+        function openCategoryDetailPage(category) {
+            detailPageCategoryImg.src = category.imageUrl;
+            detailPageCategoryName.textContent = category.name;
+            detailPageCategoryDesc.textContent = category.description;
+            categoryDetailPage.classList.add('visible');
+            mainAppPage.classList.add('hidden'); // Hide main app page
+            // Make the detail page content fill the entire screen
+            categoryDetailPage.style.width = '100vw';
+            categoryDetailPage.style.height = '100vh';
+            categoryDetailPage.style.padding = '0'; /* Remove padding */
+            categoryDetailPage.style.justifyContent = 'flex-start'; /* Align content to top */
+            categoryDetailPage.style.alignItems = 'center'; /* Center horizontally */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.marginTop = '0'; /* Remove margin from content */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.borderRadius = '0'; /* Remove border radius */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.boxShadow = 'none'; /* Remove shadow */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.maxWidth = 'none'; /* Remove max-width */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.width = '100%'; /* Full width */
+            categoryDetailPage.querySelector('.category-detail-page-content').style.height = '100%'; /* Full height */
+            categoryDetailPage.querySelector('.detail-close-btn').style.top = '1rem'; /* Adjust close button position */
+            categoryDetailPage.querySelector('.detail-close-btn').style.right = '1rem'; /* Adjust close button position */
+        }
+
+        enterAppBtn.addEventListener('click', () => {
+            if (accessCodeInput.value === '123') {
+                accessPage.classList.add('hidden');
+                mainAppPage.classList.remove('hidden');
+                mainAppPage.classList.add('flex');
+                renderCategories();
+            } else {
+                accessError.classList.remove('hidden');
+                accessCodeInput.classList.add('border-red-500');
+                setTimeout(() => {
+                    accessError.classList.add('hidden');
+                    accessCodeInput.classList.remove('border-red-500');
+                }, 3000);
+            }
+        });
+
+        homeNavBtn.addEventListener('click', () => {
+            homeSection.classList.remove('hidden');
+            aboutUsSection.classList.add('hidden');
+            settingsSection.classList.add('hidden');
+            categoryDetailPage.classList.remove('visible'); // Hide detail page if visible
+            mainAppPage.classList.remove('hidden'); // Show main app page
+        });
+
+        aboutUsNavBtn.addEventListener('click', () => {
+            aboutUsSection.classList.remove('hidden');
+            homeSection.classList.add('hidden');
+            settingsSection.classList.add('hidden');
+            categoryDetailPage.classList.remove('visible'); // Hide detail page if visible
+            mainAppPage.classList.remove('hidden'); // Show main app page
+        });
+
+        settingsNavBtn.addEventListener('click', () => {
+            settingsSection.classList.remove('hidden');
+            homeSection.classList.add('hidden');
+            aboutUsSection.classList.add('hidden');
+            categoryDetailPage.classList.remove('visible'); // Hide detail page if visible
+            mainAppPage.classList.remove('hidden'); // Show main app page
+        });
+
+        addCategoryBtn.addEventListener('click', () => {
+            addCategoryModal.classList.add('visible');
+            categoryNameInput.value = '';
+            categoryDescInput.value = '';
+            categoryFileInput.value = ''; // Clear file input
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addCategoryModal.classList.remove('visible');
+        });
+
+        closeCategoryDetailPageBtn.addEventListener('click', () => {
+            categoryDetailPage.classList.remove('visible');
+            mainAppPage.classList.remove('hidden'); // Show main app page
+            // Reset detail page styles
+            categoryDetailPage.style.width = '';
+            categoryDetailPage.style.height = '';
+            categoryDetailPage.style.padding = '';
+            categoryDetailPage.style.justifyContent = '';
+            categoryDetailPage.style.alignItems = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.marginTop = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.borderRadius = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.boxShadow = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.maxWidth = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.width = '';
+            categoryDetailPage.querySelector('.category-detail-page-content').style.height = '';
+            categoryDetailPage.querySelector('.detail-close-btn').style.top = '';
+            categoryDetailPage.querySelector('.detail-close-btn').style.right = '';
+        });
+
+        saveCategoryBtn.addEventListener('click', () => {
+            const name = categoryNameInput.value.trim();
+            const description = categoryDescInput.value.trim();
+            const file = categoryFileInput.files[0]; // Get the selected file
+
+            if (name && description) {
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        categories.push({
+                            name: name,
+                            description: description,
+                            imageUrl: e.target.result // Base64 image data
+                        });
+                        renderCategories(searchCategoryInput.value);
+                        addCategoryModal.classList.remove('visible');
+                    };
+                    reader.readAsDataURL(file); // Read file as Base64
+                } else {
+                    categories.push({
+                        name: name,
+                        description: description,
+                        imageUrl: 'https://placehold.co/100x100/e2e8f0/64748b?text=No+Image'
+                    });
+                    renderCategories(searchCategoryInput.value);
+                    addCategoryModal.classList.remove('visible');
+                }
+            } else {
+                if (!name) categoryNameInput.classList.add('border-red-500');
+                if (!description) categoryDescInput.classList.add('border-red-500');
+                setTimeout(() => {
+                    categoryNameInput.classList.remove('border-red-500');
+                    categoryDescInput.classList.remove('border-red-500');
+                }, 2000);
+            }
+        });
+
+        searchCategoryInput.addEventListener('input', (e) => {
+            renderCategories(e.target.value);
+        });
+
+        languageSelect.addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            applyLanguage(currentLanguage);
+            renderCategories(searchCategoryInput.value); // Re-render categories to update messages
+        });
+
+        lightModeBtn.addEventListener('click', () => {
+            toggleDarkMode(false);
+        });
+
+        darkModeBtn.addEventListener('click', () => {
+            toggleDarkMode(true);
+        });
+
+        window.onload = () => {
+            accessCodeInput.focus();
+            applyLanguage(currentLanguage); // Apply default language on load
+        };
+    </script>
+</body>
+</html>
