@@ -276,6 +276,30 @@
         .detail-close-btn:hover {
             color: #6366f1;
         }
+
+        /* Responsive adjustments for navigation */
+        .main-nav-buttons button {
+            flex: 1 1 auto; /* Allow buttons to grow and shrink */
+            min-width: 80px; /* Minimum width to prevent excessive squishing */
+            padding: 0.5rem; /* Adjust padding for smaller screens */
+            font-size: 0.9rem; /* Smaller font size for mobile */
+        }
+        .main-nav-buttons button span {
+            display: block; /* Ensure text wraps below icon if needed */
+            margin-top: 0.25rem; /* Space between icon and text */
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .main-nav-buttons button {
+                min-width: unset;
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+            }
+            .main-nav-buttons button span {
+                display: inline; /* Text next to icon on larger screens */
+                margin-top: 0;
+                margin-left: 0.5rem; /* Space between icon and text */
+            }
+        }
     </style>
 </head>
 <body>
@@ -296,16 +320,16 @@
 
         <!-- Main App Page -->
         <div id="main-app-page" class="page hidden flex-grow p-0">
-            <nav class="w-full bg-white border-b border-gray-200 p-4 flex flex-wrap justify-center space-x-4 sm:space-x-8 rounded-t-2xl shadow-sm">
-                <button id="homeNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+            <nav class="w-full bg-white border-b border-gray-200 p-4 flex flex-wrap justify-center space-x-2 sm:space-x-8 rounded-t-2xl shadow-sm main-nav-buttons">
+                <button id="homeNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 rounded-lg hover:bg-indigo-50">
                     <i class="fas fa-home"></i>
                     <span data-en="Home" data-ku="ماڵەوە" data-ar="الرئيسية">Home</span>
                 </button>
-                <button id="aboutUsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+                <button id="aboutUsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 rounded-lg hover:bg-indigo-50">
                     <i class="fas fa-info-circle"></i>
                     <span data-en="About Us" data-ku="دەربارەی ئێمە" data-ar="عنا">About Us</span>
                 </button>
-                <button id="settingsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
+                <button id="settingsNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 rounded-lg hover:bg-indigo-50">
                     <i class="fas fa-cog"></i>
                     <span data-en="Settings" data-ku="ڕێکخستنەکان" data-ar="الإعدادات">Settings</span>
                 </button>
