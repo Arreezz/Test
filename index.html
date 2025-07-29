@@ -47,9 +47,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
             box-sizing: border-box;
             transition: opacity 0.5s ease-in-out;
+            padding: 1rem; /* Smaller padding for mobile */
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .page {
+                padding: 2rem; /* Larger padding for larger screens */
+            }
         }
         .page.hidden {
             opacity: 0;
@@ -291,7 +296,7 @@
 
         <!-- Main App Page -->
         <div id="main-app-page" class="page hidden flex-grow p-0">
-            <nav class="w-full bg-white border-b border-gray-200 p-4 flex justify-center space-x-8 rounded-t-2xl shadow-sm">
+            <nav class="w-full bg-white border-b border-gray-200 p-4 flex flex-wrap justify-center space-x-4 sm:space-x-8 rounded-t-2xl shadow-sm">
                 <button id="homeNavBtn" class="text-lg font-medium text-gray-600 hover:text-indigo-600 transition duration-300 ease-in-out flex items-center space-x-2 p-2 rounded-lg hover:bg-indigo-50">
                     <i class="fas fa-home"></i>
                     <span data-en="Home" data-ku="ماڵەوە" data-ar="الرئيسية">Home</span>
